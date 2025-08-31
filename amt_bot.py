@@ -5,7 +5,7 @@ import requests
 import os
 import platform
 
-# ✅ Telegram Bot Config
+# ✅ Telegram Bot Config (from Railway environment variables)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
@@ -49,16 +49,17 @@ def notify(server, new_status):
     except Exception as e:
         print("Error sending Telegram message:", e)
 
-# ✅ Ensure PATH includes Chrome (important for Railway)
+# ✅ Ensure PATH includes Chrome
 os.environ["PATH"] += os.pathsep + "/usr/bin"
 
+# ✅ Tell SeleniumBase where Chrome is installed
+os.environ["CHROME_BINARY_LOCATION"] = "/usr/bin/google-chrome-stable"
+
 # ✅ Launch undetected Chrome
-driver = Driver(
-    uc=True,
-    headless=True,
-    browser_path="/usr/bin/google-chrome-stable"  # force Railway Chrome
-)
+driver = Driver(uc=True, headless=True)
+
 driver.uc_open_with_reconnect(URL, 15)
+driver.uc_gui_click_captcha()
 
 print("[INFO] Successfully bypassed Cloudflare")
 
@@ -90,9 +91,8 @@ while True:
                     # ✅ Always update stored status
                     last_status[server_name] = server_status
 
-        # after first loop, disable first-run skip
         if first_run:
-            first_run = False
+            first_run = False  # stop skipping after first loop
 
     except Exception as e:
         print("Error checking status:", e)
