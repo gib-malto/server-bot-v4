@@ -20,8 +20,6 @@ TARGET_SERVERS = [
 ]
 
 
-
-
 def notify(server, new_status):
     """Send Telegram notification for a specific server update"""
     if "online" in new_status.lower():
@@ -51,15 +49,20 @@ def notify(server, new_status):
     except Exception as e:
         print("Error sending Telegram message:", e)
 
+# ✅ Ensure PATH includes Chrome (important for Railway)
+os.environ["PATH"] += os.pathsep + "/usr/bin"
 
 # ✅ Launch undetected Chrome
-driver = Driver(uc=True, headless=True)  # set headless=False to debug visually
+driver = Driver(
+    uc=True,
+    headless=True,
+    browser_path="/usr/bin/google-chrome-stable"  # force Railway Chrome
+)
 driver.uc_open_with_reconnect(URL, 15)
-driver.uc_gui_click_captcha()
 
 print("[INFO] Successfully bypassed Cloudflare")
 
-first_run = True  # 👈 Flag to skip notifications on first run
+first_run = True  # 👈 skip first-run notifications
 
 while True:
     try:
@@ -84,10 +87,10 @@ while True:
                     if prev_status != server_status and not first_run:
                         notify(server_name, server_status)
 
-                    # ✅ Always update the stored status
+                    # ✅ Always update stored status
                     last_status[server_name] = server_status
 
-        # after first loop, turn off skip flag
+        # after first loop, disable first-run skip
         if first_run:
             first_run = False
 
