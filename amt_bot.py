@@ -9,7 +9,6 @@ import platform
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-
 # ✅ Target URL
 URL = "https://androidmultitool.com/"
 last_status = {}
@@ -19,6 +18,8 @@ TARGET_SERVERS = [
     "Infinix / Tecno / Itel Mediatek Auth",
     "Infinix / Tecno / Itel Spreadtrum Auth"
 ]
+
+
 
 
 def notify(server, new_status):
@@ -58,9 +59,11 @@ driver.uc_gui_click_captcha()
 
 print("[INFO] Successfully bypassed Cloudflare")
 
+first_run = True  # 👈 Flag to skip notifications on first run
+
 while True:
     try:
-        print("[INFO] Checking server status...\n")
+        print("[INFO] Checking AMT Server Status...\n")
 
         # Example: find the server status table
         table = driver.find_element(By.CSS_SELECTOR, "table.table")
@@ -76,9 +79,17 @@ while True:
                     print(f"{server_name}: {server_status}")
 
                     prev_status = last_status.get(server_name)
-                    if prev_status != server_status:
-                        notify(server_name, server_status)  # 🚀 only on change
-                        last_status[server_name] = server_status
+
+                    # ✅ Only notify if status changed AND not the first run
+                    if prev_status != server_status and not first_run:
+                        notify(server_name, server_status)
+
+                    # ✅ Always update the stored status
+                    last_status[server_name] = server_status
+
+        # after first loop, turn off skip flag
+        if first_run:
+            first_run = False
 
     except Exception as e:
         print("Error checking status:", e)
