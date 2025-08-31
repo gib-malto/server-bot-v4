@@ -1,5 +1,6 @@
 from seleniumbase import Driver
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 import time
 import requests
 import os
@@ -49,6 +50,21 @@ def notify(server, new_status):
     except Exception as e:
         print("Error sending Telegram message:", e)
 
+
+def wait_for_table(driver, timeout=60):
+    """Keep refreshing until the server status table loads or timeout expires"""
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            table = driver.find_element(By.CSS_SELECTOR, "table.table")
+            return table
+        except NoSuchElementException:
+            print("[INFO] Cloudflare challenge still active... retrying")
+            time.sleep(5)
+            driver.refresh()
+    raise Exception("Cloudflare challenge not bypassed within timeout")
+
+
 # ✅ Ensure PATH includes Chrome
 os.environ["PATH"] += os.pathsep + "/usr/bin"
 
@@ -58,9 +74,9 @@ os.environ["CHROME_BINARY_LOCATION"] = "/usr/bin/google-chrome-stable"
 # ✅ Launch undetected Chrome
 driver = Driver(uc=True, headless=True)
 
+# ✅ Try to bypass Cloudflare and load the table
 driver.uc_open_with_reconnect(URL, 15)
-#driver.uc_gui_click_captcha()
-
+table = wait_for_table(driver, timeout=120)  # wait up to 2 minutes
 print("[INFO] Successfully bypassed Cloudflare")
 
 first_run = True  # 👈 skip first-run notifications
@@ -69,7 +85,6 @@ while True:
     try:
         print("[INFO] Checking AMT Server Status...\n")
 
-        # Example: find the server status table
         table = driver.find_element(By.CSS_SELECTOR, "table.table")
         rows = table.find_elements(By.TAG_NAME, "tr")
 
@@ -99,4 +114,3 @@ while True:
 
     time.sleep(10)  # wait before next check
     driver.refresh()
-
