@@ -59,7 +59,7 @@ os.environ["CHROME_BINARY_LOCATION"] = "/usr/bin/google-chrome-stable"
 driver = Driver(uc=True, headless=True)
 
 driver.uc_open_with_reconnect(URL, 15)
-driver.uc_gui_click_captcha()
+#driver.uc_gui_click_captcha()
 
 print("[INFO] Successfully bypassed Cloudflare")
 
@@ -99,3 +99,4 @@ while True:
 
     time.sleep(10)  # wait before next check
     driver.refresh()
+
